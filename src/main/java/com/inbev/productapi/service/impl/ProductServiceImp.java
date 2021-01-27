@@ -62,4 +62,9 @@ public class ProductServiceImp implements ProductService {
 
         return repository.findAll(example, pageRequest);
     }
+
+    @Override
+    public Optional<Product> getByName(String name) {
+        return this.repository.findByName(name);
+    }
 }

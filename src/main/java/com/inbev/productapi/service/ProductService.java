@@ -15,4 +15,6 @@ public interface ProductService {
     Product update(Product product);
 
     Page<Product> find(Product filter, Pageable pageRequest);
+
+    Optional<Product> getByName(String name);
 }

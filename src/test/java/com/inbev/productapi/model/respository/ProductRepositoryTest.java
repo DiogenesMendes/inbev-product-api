@@ -28,7 +28,7 @@ public class ProductRepositoryTest {
 
     @Test
     @DisplayName("Must return false when there is a product with the informed name in the database")
-    public void returnTrueWheIsbnExists(){
+    public void returnTrueWheNameExists(){
         //scenario
         String name = "corona";
         Product product = createNewProduct();
@@ -60,6 +60,18 @@ public class ProductRepositoryTest {
         entityManager.persist(product);
         //when
         Optional<Product> foundProduct = repository.findById(product.getId());
+
+        //then
+        assertThat(foundProduct.isPresent()).isTrue();
+    }
+    @Test
+    @DisplayName("Must get a product by name")
+    public void findByNameTest(){
+        //given
+        Product product = createNewProduct();
+        entityManager.persist(product);
+        //when
+        Optional<Product> foundProduct = repository.findByName(product.getName());
 
         //then
         assertThat(foundProduct.isPresent()).isTrue();

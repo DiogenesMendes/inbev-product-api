@@ -120,6 +120,40 @@ public class ProductServiceTest {
 
     }
     @Test
+    @DisplayName("Must get a product by name")
+    public void getByNameTest(){
+        //given
+        String name = "corona";
+        Product product = createValidProduct();
+        product.setName(name);
+
+        //when
+        Mockito.when(respository.findByName(name)).thenReturn(Optional.of(product));
+        Optional<Product> foundProduct = service.getByName(name);
+
+        //then
+        assertThat(foundProduct.isPresent()).isTrue();
+        assertThat(foundProduct.get().getId()).isEqualTo(product.getId());
+        assertThat(foundProduct.get().getName()).isEqualTo(product.getName());
+        assertThat(foundProduct.get().getDescription()).isEqualTo(product.getDescription());
+        assertThat(foundProduct.get().getBrand()).isEqualTo(product.getBrand());
+        assertThat(foundProduct.get().getPrice()).isEqualTo(product.getPrice());
+    }
+    @Test
+    @DisplayName("Must return empty when trying to find a product by nonexistent name")
+    public void productNotFoundByNameTest(){
+        //given
+        String name = "corona";
+
+        //when
+        Mockito.when(respository.findByName(name)).thenReturn(Optional.empty());
+        Optional<Product> product = service.getByName(name);
+
+        //then
+        assertThat(product.isPresent()).isFalse();
+
+    }
+    @Test
     @DisplayName("Must delete a product when finding by Id")
     public void deleteProductTest(){
         //given
@@ -188,26 +222,6 @@ public class ProductServiceTest {
 
         Mockito.verify(respository,Mockito.never()).save(product);
     }
-    @Test
-    @DisplayName("Must filter products by properties")
-    public void filterProductTest(){
-        //given
-        Product product = createValidProduct();
-        PageRequest pageRequest = PageRequest.of(0, 10);
-        List<Product> list = Arrays.asList(product);
-        Page<Product> page = new PageImpl<Product>(list, pageRequest,1);
-        Mockito.when(respository.findAll(Mockito.any(Example.class),Mockito.any(PageRequest.class)))
-                .thenReturn(page);
-        //when
-        Page<Product> result = service.find(product, pageRequest);
-
-        //then
-        assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getContent()).isEqualTo(list);
-        assertThat(result.getPageable().getPageNumber()).isEqualTo(0);
-        assertThat(result.getPageable().getPageSize()).isEqualTo(10);
-    }
-
     private Product createValidProduct() {
         return Product.builder().brand("123").name("fulano").description("As aventuras").price(100.0).build();
     }

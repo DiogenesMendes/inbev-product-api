@@ -5,6 +5,8 @@ import com.inbev.productapi.model.entity.Product;
 import com.inbev.productapi.service.ProductService;
 import com.inbev.productapi.api.dto.ProductDTO;
 import com.inbev.productapi.api.excptions.ApiErrors;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/product")
+@Api("Product API")
 public class ProductController {
 
     private ProductService service;
@@ -33,6 +36,7 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @ApiOperation("Create a product")
     public ProductDTO create(@RequestBody  @Valid ProductDTO dto){
         Product entity = modelMapper.map(dto, Product.class);
         entity = service.save(entity);
@@ -40,20 +44,30 @@ public class ProductController {
     }
     @GetMapping("{id}")
     @ResponseStatus(HttpStatus.OK)
+    @ApiOperation("get a product details by id")
     public ProductDTO get (@PathVariable Long id){
         return service.getById(id)
+                .map( product -> modelMapper.map(product, ProductDTO.class))
+                .orElseThrow( () -> new ResponseStatusException( HttpStatus.NOT_FOUND));
+    }
+    @GetMapping("/findByName/{name}")
+    @ApiOperation("find product details by name")
+    public ProductDTO findByName(@PathVariable String name) {
+        return service.getByName(name)
                 .map( product -> modelMapper.map(product, ProductDTO.class))
                 .orElseThrow( () -> new ResponseStatusException( HttpStatus.NOT_FOUND));
     }
 
     @DeleteMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ApiOperation("delete a product")
     public void delete(@PathVariable Long id){
         Product product = service.getById(id)
                 .orElseThrow( () -> new ResponseStatusException( HttpStatus.NOT_FOUND));;
         service.delete(product);
     }
     @PutMapping("{id}")
+    @ApiOperation("update a product")
     public ProductDTO update (@PathVariable Long id, ProductDTO dto ){
         return service.getById(id).map( product -> {
             product.setName(dto.getName());
@@ -61,14 +75,7 @@ public class ProductController {
             return modelMapper.map(product, ProductDTO.class);
         }).orElseThrow( () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
-    @GetMapping
-    public Page<ProductDTO> find(ProductDTO dto, Pageable pageRequest) {
-        Product filter = modelMapper.map(dto, Product.class);
-        Page<Product> result = service.find(filter, pageRequest);
-        List<ProductDTO> list = result.getContent().stream().map(entity -> modelMapper.map(entity, ProductDTO.class))
-                .collect(Collectors.toList());
-        return new PageImpl<ProductDTO>(list, pageRequest, result.getTotalElements());
-    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiErrors handleValidationExceptions(MethodArgumentNotValidException ex){

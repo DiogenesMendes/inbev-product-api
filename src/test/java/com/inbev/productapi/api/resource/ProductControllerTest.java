@@ -154,6 +154,50 @@ public class ProductControllerTest {
                 .andExpect(status().isNotFound());
     }
     @Test
+    @DisplayName("must get information from a product by name")
+    public void getProductDetailsByNameTest() throws Exception{
+        //given
+        String name = "corona";
+        Product product = Product.builder()
+                .id(createNewProductDTO().getId())
+                .name(name)
+                .description(createNewProductDTO().getDescription())
+                .brand(createNewProductDTO().getBrand())
+                .price(createNewProductDTO().getPrice())
+                .build();
+        BDDMockito.given(service.getByName(name)).willReturn(Optional.of(product));
+
+        //when
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .get(PRODUCT_API.concat("/findByName/" + name))
+                .accept(MediaType.APPLICATION_JSON);
+
+        //then
+        mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id").value(createNewProductDTO().getId()))
+                .andExpect(jsonPath("name").value(name))
+                .andExpect(jsonPath("description").value(createNewProductDTO().getDescription()))
+                .andExpect(jsonPath("brand").value(createNewProductDTO().getBrand()))
+                .andExpect(jsonPath("price").value(createNewProductDTO().getPrice()));
+
+    }
+    @Test
+    @DisplayName("must return a resource not found when the requested by the name product does not exist")
+    public void productNotFoundByNameTest() throws Exception{
+        //given
+        BDDMockito.given(service.getByName("corona")).willReturn(Optional.empty());
+
+        //when
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .get(PRODUCT_API.concat("/findByName/" + "corona"))
+                .accept(MediaType.APPLICATION_JSON);
+
+        //then
+        mvc.perform(request)
+                .andExpect(status().isNotFound());
+    }
+    @Test
     @DisplayName("Must delete a product")
     public void deleteProductTest() throws Exception{
         //given
@@ -231,34 +275,7 @@ public class ProductControllerTest {
         mvc.perform(request)
                 .andExpect( status().isNotFound());
     }
-    @Test
-    @DisplayName("Must filter the product")
-    public void findProductTest() throws Exception{
-        //given
-        Long id = 11L;
-        Product product = Product.builder().id(id)
-                .name(createNewProductDTO().getName())
-                .description(createNewProductDTO().getDescription())
-                .brand(createNewProductDTO().getBrand())
-                .price(createNewProductDTO().getPrice())
-                .build();
 
-        BDDMockito.given( service.find(Mockito.any(Product.class),Mockito.any(Pageable.class)))
-                .willReturn( new PageImpl<Product>(Arrays.asList(product), PageRequest.of(0,100),1));
-
-        String queryString = String.format("?name=%s&name=%s&price=0&size=100",
-                product.getName(), product.getPrice());
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .get(PRODUCT_API.concat(queryString))
-                .accept(MediaType.APPLICATION_JSON);
-        mvc.perform(request)
-                .andExpect( status().isOk())
-                .andExpect( jsonPath("content", Matchers.hasSize(1)))
-                .andExpect(jsonPath("totalElements").value(1))
-                .andExpect(jsonPath("pageable.pageSize").value(100))
-                .andExpect( jsonPath("pageable.pageNumber").value(0));
-    }
     private ProductDTO createNewProductDTO() {
         return ProductDTO.builder().name("Artur").price(10.15).description("test").brand("corona").build();
     }
