@@ -42,7 +42,7 @@ public class ProductRepositoryTest {
     }
     @Test
     @DisplayName("must return false when there is no product with the informed name in the database")
-    public void returnFalseWheIsbnDoesntExists(){
+    public void returnFalseWheNameDoesntExists(){
         //scenario
         String name = "corona";
 
